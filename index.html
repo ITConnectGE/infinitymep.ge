@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Infinity Map — Construction Consulting · Tbilisi</title>
+<meta name="description" content="Infinity Map is a construction consulting firm in Tbilisi, Georgia — project management, technical supervision, cost control, permitting and due diligence for developers, investors and owners." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..600&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#efe9dd;
+    --paper-2:#e7dfd0;
+    --ink:#1a1916;
+    --ink-soft:#4b463d;
+    --line:#c9bfa9;
+    --accent:#e2542a;      /* construction safety orange, refined */
+    --accent-deep:#b53c18;
+    --blue:#2b4a5e;        /* blueprint slate */
+    --maxw:1280px;
+    --ease:cubic-bezier(.2,.7,.2,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Archivo",system-ui,sans-serif;
+    font-size:17px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* ---- background atmosphere: survey grid + grain ---- */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(to right, rgba(26,25,22,.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(26,25,22,.045) 1px, transparent 1px);
+    background-size:64px 64px;
+    -webkit-mask-image:radial-gradient(circle at 50% 0%, #000 0%, transparent 78%);
+            mask-image:radial-gradient(circle at 50% 0%, #000 0%, transparent 78%);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px;position:relative;z-index:2}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:"IBM Plex Mono",monospace;font-weight:500;letter-spacing:.02em}
+  .label{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:500;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--accent-deep);
+  }
+  .serif{font-family:"Fraunces",serif}
+
+  /* ---------- NAV ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    transition:background .4s var(--ease), box-shadow .4s var(--ease), backdrop-filter .4s;
+  }
+  header.scrolled{
+    background:rgba(239,233,221,.82);
+    backdrop-filter:blur(12px) saturate(1.2);
+    box-shadow:0 1px 0 var(--line);
+  }
+  nav{display:flex;align-items:center;justify-content:space-between;height:78px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:"IBM Plex Mono",monospace;font-weight:600;letter-spacing:.16em;font-size:14px}
+  .brand .mark{width:30px;height:30px;flex:none}
+  .brand .mark circle, .brand .mark path{stroke:var(--ink);}
+  .navlinks{display:flex;gap:34px;align-items:center}
+  .navlinks a{font-size:14px;font-weight:500;position:relative;color:var(--ink-soft);transition:color .25s}
+  .navlinks a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:2px;background:var(--accent);transition:width .3s var(--ease)}
+  .navlinks a:hover{color:var(--ink)}
+  .navlinks a:hover::after{width:100%}
+  .nav-right{display:flex;align-items:center;gap:18px}
+  .lang{display:flex;gap:2px;border:1px solid var(--line);border-radius:999px;padding:3px;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600}
+  .lang button{border:none;background:none;cursor:pointer;color:var(--ink-soft);padding:5px 11px;border-radius:999px;transition:.25s;font-family:inherit;font-weight:600;letter-spacing:.04em}
+  .lang button.active{background:var(--ink);color:var(--paper)}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;background:var(--accent);color:#fff;
+    padding:13px 22px;border-radius:999px;font-weight:600;font-size:14px;
+    transition:transform .25s var(--ease), background .25s, box-shadow .25s;
+    box-shadow:0 8px 22px -10px rgba(226,84,42,.8);border:none;cursor:pointer;
+  }
+  .btn:hover{transform:translateY(-2px);background:var(--accent-deep);box-shadow:0 14px 30px -10px rgba(226,84,42,.9)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink);box-shadow:none}
+  .btn.ghost:hover{background:var(--ink);color:var(--paper);transform:translateY(-2px)}
+  .burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px}
+  .burger span{width:24px;height:2px;background:var(--ink);transition:.3s}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;padding:170px 0 90px;overflow:hidden}
+  .contours{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.5}
+  .contours svg{position:absolute;right:-6%;top:2%;width:62vw;max-width:1000px;height:auto}
+  .contours path{fill:none;stroke:var(--accent);stroke-width:1;opacity:.32;
+    stroke-dasharray:2200;stroke-dashoffset:2200;animation:draw 3.2s var(--ease) forwards}
+  .contours path:nth-child(2){stroke:var(--blue);opacity:.28;animation-delay:.15s}
+  .contours path:nth-child(3){stroke:var(--accent);opacity:.2;animation-delay:.3s}
+  .contours path:nth-child(4){stroke:var(--blue);opacity:.16;animation-delay:.45s}
+  .contours path:nth-child(5){stroke:var(--accent);opacity:.12;animation-delay:.6s}
+  @keyframes draw{to{stroke-dashoffset:0}}
+
+  .hero-grid{position:relative;z-index:3;display:grid;grid-template-columns:1.55fr 1fr;gap:40px;align-items:end}
+  .coord{display:flex;gap:18px;align-items:center;margin-bottom:26px}
+  .coord .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(226,84,42,.18);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(226,84,42,.18)}50%{box-shadow:0 0 0 9px rgba(226,84,42,0)}}
+  h1{
+    font-family:"Fraunces",serif;font-weight:400;font-size:clamp(46px,7.4vw,104px);
+    line-height:.97;letter-spacing:-.02em;
+  }
+  h1 em{font-style:italic;color:var(--accent-deep)}
+  h1 .lift{display:inline-block;opacity:0;transform:translateY(115%);}
+  .hero.in h1 .lift{animation:lift .9s var(--ease) forwards}
+  @keyframes lift{to{opacity:1;transform:translateY(0)}}
+  .hero-sub{max-width:430px;color:var(--ink-soft);font-size:18px;margin-left:auto;padding-bottom:8px;
+    opacity:0;transform:translateY(20px);}
+  .hero.in .hero-sub{animation:rise .8s .5s var(--ease) forwards}
+  .hero-actions{display:flex;gap:14px;margin-top:42px;flex-wrap:wrap;
+    opacity:0;transform:translateY(20px)}
+  .hero.in .hero-actions{animation:rise .8s .65s var(--ease) forwards}
+  @keyframes rise{to{opacity:1;transform:translateY(0)}}
+
+  .hero-meta{display:flex;gap:48px;margin-top:74px;border-top:1px solid var(--line);padding-top:26px;flex-wrap:wrap;
+    opacity:0;transform:translateY(20px)}
+  .hero.in .hero-meta{animation:rise .8s .8s var(--ease) forwards}
+  .hero-meta .item .n{font-family:"Fraunces",serif;font-size:42px;line-height:1;display:flex;align-items:baseline;gap:4px}
+  .hero-meta .item .n small{font-size:20px;color:var(--accent)}
+  .hero-meta .item p{font-size:13.5px;color:var(--ink-soft);margin-top:8px;max-width:170px}
+
+  /* ---------- SECTION SHELL ---------- */
+  section{position:relative;z-index:2;padding:104px 0}
+  .sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;margin-bottom:56px;flex-wrap:wrap}
+  .sec-head h2{font-family:"Fraunces",serif;font-weight:400;font-size:clamp(32px,4.4vw,58px);line-height:1.02;letter-spacing:-.02em;max-width:760px}
+  .sec-head .label{margin-bottom:18px;display:block}
+  .reveal{opacity:0;transform:translateY(34px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+  .reveal.show{opacity:1;transform:none}
+
+  /* ---------- SERVICES ---------- */
+  .services{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);background:var(--line)}
+  .svc{background:var(--paper);padding:38px 34px 44px;position:relative;transition:background .4s var(--ease);min-height:300px;display:flex;flex-direction:column}
+  .svc:hover{background:var(--paper-2)}
+  .svc .num{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent-deep);letter-spacing:.1em}
+  .svc h3{font-family:"Fraunces",serif;font-weight:500;font-size:25px;margin:28px 0 14px;line-height:1.1}
+  .svc p{font-size:15px;color:var(--ink-soft);line-height:1.62}
+  .svc .ic{width:34px;height:34px;margin-top:auto;color:var(--accent);transition:transform .4s var(--ease)}
+  .svc:hover .ic{transform:translate(5px,-5px)}
+  .svc::after{content:"";position:absolute;left:0;top:0;width:0;height:3px;background:var(--accent);transition:width .4s var(--ease)}
+  .svc:hover::after{width:100%}
+
+  /* ---------- APPROACH ---------- */
+  .approach{background:var(--ink);color:var(--paper);border-radius:4px;overflow:hidden;position:relative}
+  .approach .wrap{padding:96px 0}
+  .approach::before{content:"";position:absolute;inset:0;opacity:.06;
+    background-image:linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px);
+    background-size:48px 48px}
+  .approach .label{color:var(--accent)}
+  .approach h2{color:var(--paper)}
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:60px}
+  .step{position:relative;padding-top:30px;border-top:1px solid rgba(255,255,255,.18)}
+  .step .st-n{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent);position:absolute;top:-1px;left:0;
+    border-top:2px solid var(--accent);padding-top:14px}
+  .step h4{font-family:"Fraunces",serif;font-weight:500;font-size:22px;margin:18px 0 12px}
+  .step p{font-size:14.5px;color:rgba(239,233,221,.7);line-height:1.6}
+
+  /* ---------- SECTORS strip ---------- */
+  .sectors{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+  .chip{border:1px solid var(--line);border-radius:999px;padding:11px 20px;font-size:14px;font-weight:500;
+    transition:.3s var(--ease);cursor:default;background:var(--paper)}
+  .chip:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);transform:translateY(-2px)}
+
+  /* ---------- WHY / split ---------- */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+  .split .blueprint{position:relative;aspect-ratio:1/1;border:1px solid var(--line);border-radius:4px;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(43,74,94,.06), transparent 60%),
+      var(--paper-2);
+    overflow:hidden}
+  .split .blueprint svg{position:absolute;inset:0;width:100%;height:100%}
+  .split .blueprint .tag{position:absolute;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--blue);background:rgba(239,233,221,.85);padding:4px 8px;border:1px solid var(--line);border-radius:3px}
+  .why-list{list-style:none;margin-top:8px}
+  .why-list li{padding:22px 0;border-top:1px solid var(--line);display:flex;gap:20px;align-items:flex-start}
+  .why-list li:last-child{border-bottom:1px solid var(--line)}
+  .why-list .k{font-family:"IBM Plex Mono",monospace;color:var(--accent-deep);font-size:13px;flex:none;padding-top:4px}
+  .why-list h4{font-family:"Fraunces",serif;font-weight:500;font-size:21px;margin-bottom:6px}
+  .why-list p{font-size:15px;color:var(--ink-soft)}
+
+  /* ---------- CTA / CONTACT ---------- */
+  .cta{position:relative;overflow:hidden}
+  .cta-box{background:var(--accent);color:#fff;border-radius:6px;padding:72px 64px;position:relative;overflow:hidden}
+  .cta-box::before{content:"";position:absolute;right:-80px;bottom:-120px;width:420px;height:420px;border-radius:50%;
+    border:60px solid rgba(255,255,255,.1)}
+  .cta-box::after{content:"";position:absolute;right:60px;top:-90px;width:220px;height:220px;border-radius:50%;
+    border:30px solid rgba(255,255,255,.09)}
+  .cta-box .label{color:rgba(255,255,255,.85)}
+  .cta-box h2{font-family:"Fraunces",serif;font-weight:400;font-size:clamp(34px,5vw,64px);line-height:1.02;margin:16px 0 30px;max-width:680px;position:relative;z-index:2}
+  .cta-contacts{display:flex;gap:48px;flex-wrap:wrap;position:relative;z-index:2;margin-top:38px}
+  .cta-contacts a{display:block}
+  .cta-contacts .label{color:rgba(255,255,255,.7);margin-bottom:6px}
+  .cta-contacts .v{font-family:"Fraunces",serif;font-size:22px}
+  .cta .btn.light{background:#fff;color:var(--accent-deep)}
+  .cta .btn.light:hover{background:var(--ink);color:#fff}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:70px 0 50px;position:relative;z-index:2;border-top:1px solid var(--line);margin-top:40px}
+  .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;align-items:flex-start}
+  .foot-grid .brand{margin-bottom:18px}
+  .foot-col h5{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:16px}
+  .foot-col a{display:block;color:var(--ink-soft);font-size:15px;padding:5px 0;transition:.25s}
+  .foot-col a:hover{color:var(--accent-deep)}
+  .foot-bottom{display:flex;justify-content:space-between;margin-top:54px;padding-top:24px;border-top:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-soft);flex-wrap:wrap;gap:12px}
+
+  /* ---------- responsive ---------- */
+  @media(max-width:900px){
+    .hero-grid{grid-template-columns:1fr}
+    .hero-sub{margin-left:0}
+    .services{grid-template-columns:1fr 1fr}
+    .steps{grid-template-columns:1fr 1fr}
+    .split{grid-template-columns:1fr;gap:40px}
+    .contours svg{width:120vw;opacity:.7;right:-30%}
+    .navlinks{display:none}
+    .burger{display:flex}
+    .cta-box{padding:48px 30px}
+  }
+  @media(max-width:560px){
+    .wrap{padding:0 20px}
+    .services{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr}
+    .hero-meta{gap:30px}
+    .nav-right .btn{display:none}
+  }
+  [data-ka]{display:none}
+  html[lang="ka"] [data-en]{display:none}
+  html[lang="ka"] [data-ka]{display:inline}
+  html[lang="ka"] p[data-ka],html[lang="ka"] h1[data-ka],html[lang="ka"] div[data-ka]{display:block}
+  html[lang="ka"]{font-feature-settings:normal}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="#top">
+        <svg class="mark" viewBox="0 0 30 30" fill="none">
+          <circle cx="15" cy="15" r="13" stroke-width="1.4"/>
+          <path d="M3 19 Q9 9 15 15 T27 11" stroke-width="1.4" stroke="var(--accent)"/>
+          <circle cx="15" cy="15" r="2.4" fill="var(--accent)" stroke="none"/>
+        </svg>
+        INFINITY&nbsp;MAP
+      </a>
+      <div class="navlinks">
+        <a href="#services"><span data-en>Services</span><span data-ka>სერვისები</span></a>
+        <a href="#approach"><span data-en>Approach</span><span data-ka>მიდგომა</span></a>
+        <a href="#sectors"><span data-en>Sectors</span><span data-ka>სექტორები</span></a>
+        <a href="#why"><span data-en>Why us</span><span data-ka>ჩვენ შესახებ</span></a>
+        <a href="#contact"><span data-en>Contact</span><span data-ka>კონტაქტი</span></a>
+      </div>
+      <div class="nav-right">
+        <div class="lang">
+          <button id="en" class="active" onclick="setLang('en')">EN</button>
+          <button id="ka" onclick="setLang('ka')">ქარ</button>
+        </div>
+        <a href="#contact" class="btn"><span data-en>Start a project</span><span data-ka>დაიწყე პროექტი</span></a>
+        <button class="burger" onclick="document.querySelector('.navlinks').classList.toggle('open');this.classList.toggle('on')" aria-label="menu"><span></span><span></span><span></span></button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="contours">
+    <svg viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet">
+      <path d="M-50 600 C 200 480 360 560 520 460 S 820 300 1080 360"/>
+      <path d="M-50 520 C 220 410 380 490 540 390 S 840 240 1080 290"/>
+      <path d="M-50 440 C 240 350 400 420 560 320 S 860 180 1080 220"/>
+      <path d="M-50 360 C 260 290 420 350 580 250 S 880 120 1080 150"/>
+      <path d="M-50 280 C 280 230 440 280 600 190 S 900 70 1080 90"/>
+    </svg>
+  </div>
+  <div class="wrap">
+    <div class="coord">
+      <span class="dot"></span>
+      <span class="mono" style="font-size:13px;letter-spacing:.12em;color:var(--ink-soft)">TBILISI, GEORGIA &nbsp;·&nbsp; 41.7151° N &nbsp; 44.8271° E</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>
+          <span data-en>
+            <span class="lift" style="animation-delay:.05s">We map the</span><br>
+            <span class="lift" style="animation-delay:.18s"><em>path</em> from plot</span><br>
+            <span class="lift" style="animation-delay:.31s">to finished build.</span>
+          </span>
+          <span data-ka>
+            <span class="lift" style="animation-delay:.05s">მივყავართ მიწის</span><br>
+            <span class="lift" style="animation-delay:.18s"><em>ნაკვეთიდან</em></span><br>
+            <span class="lift" style="animation-delay:.31s">დასრულებულ შენობამდე.</span>
+          </span>
+        </h1>
+      </div>
+      <p class="hero-sub">
+        <span data-en>Independent construction consulting in Tbilisi — protecting your budget, programme and quality from feasibility through to handover.</span>
+        <span data-ka>დამოუკიდებელი სამშენებლო კონსალტინგი თბილისში — ვიცავთ თქვენს ბიუჯეტს, ვადებსა და ხარისხს კონცეფციიდან ჩაბარებამდე.</span>
+      </p>
+    </div>
+    <div class="hero-actions">
+      <a href="#contact" class="btn"><span data-en>Book a consultation</span><span data-ka>დაჯავშნე კონსულტაცია</span> →</a>
+      <a href="#services" class="btn ghost"><span data-en>Explore services</span><span data-ka>ნახე სერვისები</span></a>
+    </div>
+    <div class="hero-meta">
+      <div class="item"><div class="n">120<small>+</small></div><p><span data-en>Projects guided across Georgia</span><span data-ka>პროექტი საქართველოს მასშტაბით</span></p></div>
+      <div class="item"><div class="n">14<small>%</small></div><p><span data-en>Average cost saved vs. baseline</span><span data-ka>საშუალო ხარჯის დაზოგვა</span></p></div>
+      <div class="item"><div class="n">0<small>.</small></div><p><span data-en>Conflicts of interest — we never build</span><span data-ka>ინტერესთა კონფლიქტი — ჩვენ არ ვაშენებთ</span></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services" class="wrap">
+  <div class="sec-head reveal">
+    <div>
+      <span class="label">§ 01 — Capabilities</span>
+      <h2><span data-en>End-to-end advisory for owners, investors and developers.</span><span data-ka>სრული საკონსულტაციო მომსახურება მესაკუთრეებისა და ინვესტორებისთვის.</span></h2>
+    </div>
+  </div>
+  <div class="services reveal">
+    <div class="svc">
+      <span class="num">01</span>
+      <h3><span data-en>Owner's Project Management</span><span data-ka>პროექტის მენეჯმენტი</span></h3>
+      <p><span data-en>We represent your interests end-to-end — coordinating designers, contractors and authorities so the project lands on time and on budget.</span><span data-ka>ვწარმოადგენთ თქვენს ინტერესებს — ვკოორდინირებთ დიზაინერებს, კონტრაქტორებსა და უწყებებს ვადებსა და ბიუჯეტში.</span></p>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 19V5M5 19h14M9 15l3-4 3 2 4-6"/></svg>
+    </div>
+    <div class="svc">
+      <span class="num">02</span>
+      <h3><span data-en>Technical Supervision</span><span data-ka>ტექნიკური ზედამხედველობა</span></h3>
+      <p><span data-en>Independent site supervision and quality control to Georgian norms and international standards — every pour, every detail verified.</span><span data-ka>დამოუკიდებელი ზედამხედველობა და ხარისხის კონტროლი ქართული და საერთაშორისო სტანდარტებით.</span></p>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    </div>
+    <div class="svc">
+      <span class="num">03</span>
+      <h3><span data-en>Cost &amp; Quantity Control</span><span data-ka>ხარჯთაღრიცხვა</span></h3>
+      <p><span data-en>Detailed estimates, BoQ, tendering and payment certification — so you know exactly where every GEL goes.</span><span data-ka>დეტალური ხარჯთაღრიცხვა, ტენდერი და გადახდების სერტიფიცირება — სრული გამჭვირვალობა.</span></p>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+    </div>
+    <div class="svc">
+      <span class="num">04</span>
+      <h3><span data-en>Permitting &amp; Legalization</span><span data-ka>ნებართვები და ლეგალიზაცია</span></h3>
+      <p><span data-en>Construction permits, land use, and documentation handled with the Tbilisi municipality and relevant authorities.</span><span data-ka>მშენებლობის ნებართვა, მიწათსარგებლობა და დოკუმენტაცია თბილისის მერიასთან.</span></p>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 14l2 2 4-4"/></svg>
+    </div>
+    <div class="svc">
+      <span class="num">05</span>
+      <h3><span data-en>Feasibility &amp; Due Diligence</span><span data-ka>მიზანშეწონილობა და დიუ-დილიჯენსი</span></h3>
+      <p><span data-en>Technical and financial assessment before you commit — risk, ROI, and buildability mapped before the first shovel.</span><span data-ka>ტექნიკური და ფინანსური შეფასება ინვესტიციამდე — რისკი, ROI და განხორციელებადობა.</span></p>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 4-5"/></svg>
+    </div>
+    <div class="svc">
+      <span class="num">06</span>
+      <h3><span data-en>Design &amp; BIM Coordination</span><span data-ka>დიზაინი და BIM კოორდინაცია</span></h3>
+      <p><span data-en>Clash-free coordination of architecture, structure and MEP — catching conflicts in the model, not on site.</span><span data-ka>არქიტექტურის, კონსტრუქციისა და საინჟინრო სისტემების კოორდინაცია მოდელში, არა ობიექტზე.</span></p>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 2 7l10 5 10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+  </div>
+</section>
+
+<!-- APPROACH -->
+<section id="approach" class="wrap">
+  <div class="approach reveal">
+    <div class="wrap">
+      <span class="label">§ 02 — How we work</span>
+      <h2 style="margin-top:16px"><span data-en>A surveyor's discipline,<br>applied to your whole project.</span><span data-ka>გეოდეზისტის სიზუსტე —<br>გამოყენებული მთელ პროექტზე.</span></h2>
+      <div class="steps">
+        <div class="step"><span class="st-n">/ 01</span><h4><span data-en>Survey</span><span data-ka>კვლევა</span></h4><p><span data-en>We assess the site, brief, budget and constraints — and define what success means in numbers.</span><span data-ka>ვაფასებთ ობიექტს, ბიუჯეტსა და შეზღუდვებს — ვაყალიბებთ წარმატების კრიტერიუმებს.</span></p></div>
+        <div class="step"><span class="st-n">/ 02</span><h4><span data-en>Plan</span><span data-ka>დაგეგმვა</span></h4><p><span data-en>Programme, cost plan and procurement strategy — a clear route with every risk flagged early.</span><span data-ka>ვადები, ბიუჯეტი და შესყიდვების სტრატეგია — მკაფიო გზა ადრეული რისკებით.</span></p></div>
+        <div class="step"><span class="st-n">/ 03</span><h4><span data-en>Build</span><span data-ka>მშენებლობა</span></h4><p><span data-en>On-site supervision, weekly reporting and proactive issue resolution at every stage.</span><span data-ka>ზედამხედველობა, ყოველკვირეული ანგარიში და პრობლემების დროული გადაჭრა.</span></p></div>
+        <div class="step"><span class="st-n">/ 04</span><h4><span data-en>Hand over</span><span data-ka>ჩაბარება</span></h4><p><span data-en>Snagging, commissioning and complete documentation — handed over clean and defect-free.</span><span data-ka>ხარვეზების აღმოფხვრა, გაშვება და სრული დოკუმენტაცია — სუფთა ჩაბარება.</span></p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTORS -->
+<section id="sectors" class="wrap">
+  <div class="sec-head reveal">
+    <div>
+      <span class="label">§ 03 — Sectors</span>
+      <h2><span data-en>We consult across the sectors shaping modern Georgia.</span><span data-ka>ვმუშაობთ თანამედროვე საქართველოს მთავარ სექტორებში.</span></h2>
+    </div>
+  </div>
+  <div class="sectors reveal">
+    <span class="chip"><span data-en>Residential &amp; Multi-family</span><span data-ka>საცხოვრებელი</span></span>
+    <span class="chip"><span data-en>Hospitality &amp; Hotels</span><span data-ka>სასტუმროები</span></span>
+    <span class="chip"><span data-en>Commercial &amp; Retail</span><span data-ka>კომერციული</span></span>
+    <span class="chip"><span data-en>Office &amp; Mixed-use</span><span data-ka>ოფისი / შერეული</span></span>
+    <span class="chip"><span data-en>Industrial &amp; Logistics</span><span data-ka>ინდუსტრიული</span></span>
+    <span class="chip"><span data-en>Infrastructure</span><span data-ka>ინფრასტრუქტურა</span></span>
+    <span class="chip"><span data-en>Renovation &amp; Restoration</span><span data-ka>რეკონსტრუქცია</span></span>
+    <span class="chip"><span data-en>Private Villas</span><span data-ka>კერძო სახლები</span></span>
+  </div>
+</section>
+
+<!-- WHY -->
+<section id="why" class="wrap">
+  <div class="split">
+    <div class="reveal">
+      <span class="label">§ 04 — Why Infinity Map</span>
+      <h2 style="font-family:Fraunces;font-weight:400;font-size:clamp(30px,4vw,52px);line-height:1.04;letter-spacing:-.02em;margin:18px 0 10px">
+        <span data-en>On your side of the table.</span><span data-ka>თქვენს მხარეს.</span>
+      </h2>
+      <ul class="why-list">
+        <li><span class="k">A.</span><div><h4><span data-en>Truly independent</span><span data-ka>სრულიად დამოუკიდებელი</span></h4><p><span data-en>We don't build or sell materials. Our only incentive is your project's success.</span><span data-ka>ჩვენ არ ვაშენებთ და არ ვყიდით მასალას. ჩვენი ერთადერთი ინტერესი თქვენი წარმატებაა.</span></p></div></li>
+        <li><span class="k">B.</span><div><h4><span data-en>Local expertise, global standards</span><span data-ka>ლოკალური ცოდნა, საერთაშორისო სტანდარტი</span></h4><p><span data-en>Fluent in Georgian regulation and FIDIC / international best practice alike.</span><span data-ka>ვფლობთ ქართულ რეგულაციებსა და FIDIC / საერთაშორისო პრაქტიკას.</span></p></div></li>
+        <li><span class="k">C.</span><div><h4><span data-en>Numbers you can trust</span><span data-ka>სანდო ციფრები</span></h4><p><span data-en>Transparent reporting and audited cost control at every milestone.</span><span data-ka>გამჭვირვალე ანგარიშგება და აუდირებული ხარჯების კონტროლი.</span></p></div></li>
+      </ul>
+    </div>
+    <div class="blueprint reveal" aria-hidden="true">
+      <svg viewBox="0 0 400 400" fill="none" stroke="var(--blue)" stroke-width="1" opacity=".55">
+        <rect x="60" y="60" width="280" height="280" stroke-dasharray="4 4"/>
+        <rect x="100" y="100" width="150" height="200"/>
+        <rect x="250" y="160" width="90" height="140"/>
+        <path d="M100 160h150M100 220h150M175 100v200"/>
+        <circle cx="300" cy="110" r="34" stroke="var(--accent)"/>
+        <path d="M60 360h280M40 60v280" stroke-width="1.4"/>
+        <path d="M60 350l8-5M60 350l8 5" stroke="var(--accent)"/>
+      </svg>
+      <span class="tag" style="top:14px;left:14px">DWG · INFINITYMAP / SITE-01</span>
+      <span class="tag" style="bottom:14px;right:14px">SCALE 1:200</span>
+      <span class="tag" style="top:120px;right:30px;color:var(--accent-deep);border-color:var(--accent)">ZONE A</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / CONTACT -->
+<section id="contact" class="wrap cta">
+  <div class="cta-box reveal">
+    <span class="label">§ 05 — Let's talk</span>
+    <h2><span data-en>Have a plot, a building, or a problem on site? Let's map the way forward.</span><span data-ka>გაქვთ ნაკვეთი, შენობა ან პრობლემა ობიექტზე? დავგეგმოთ შემდეგი ნაბიჯი.</span></h2>
+    <a href="mailto:info@infinitymap.ge" class="btn light"><span data-en>Email us</span><span data-ka>მოგვწერეთ</span> →</a>
+    <div class="cta-contacts">
+      <a href="mailto:info@infinitymap.ge"><span class="label">Email</span><span class="v">info@infinitymap.ge</span></a>
+      <a href="tel:+995500000000"><span class="label">Phone</span><span class="v">+995 500 00 00 00</span></a>
+      <div><span class="label" style="display:block">Studio</span><span class="v">Tbilisi, Georgia</span></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div style="max-width:320px">
+        <a class="brand" href="#top">
+          <svg class="mark" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="13" stroke-width="1.4" stroke="var(--ink)"/><path d="M3 19 Q9 9 15 15 T27 11" stroke-width="1.4" stroke="var(--accent)"/><circle cx="15" cy="15" r="2.4" fill="var(--accent)"/></svg>
+          INFINITY&nbsp;MAP
+        </a>
+        <p style="color:var(--ink-soft);font-size:14.5px"><span data-en>Independent construction consulting, project management and technical supervision — Tbilisi, Georgia.</span><span data-ka>დამოუკიდებელი სამშენებლო კონსალტინგი და ზედამხედველობა — თბილისი, საქართველო.</span></p>
+      </div>
+      <div class="foot-col">
+        <h5><span data-en>Services</span><span data-ka>სერვისები</span></h5>
+        <a href="#services"><span data-en>Project Management</span><span data-ka>მენეჯმენტი</span></a>
+        <a href="#services"><span data-en>Technical Supervision</span><span data-ka>ზედამხედველობა</span></a>
+        <a href="#services"><span data-en>Cost Control</span><span data-ka>ხარჯთაღრიცხვა</span></a>
+        <a href="#services"><span data-en>Permitting</span><span data-ka>ნებართვები</span></a>
+      </div>
+      <div class="foot-col">
+        <h5><span data-en>Company</span><span data-ka>კომპანია</span></h5>
+        <a href="#why"><span data-en>Why us</span><span data-ka>ჩვენ შესახებ</span></a>
+        <a href="#sectors"><span data-en>Sectors</span><span data-ka>სექტორები</span></a>
+        <a href="#approach"><span data-en>Approach</span><span data-ka>მიდგომა</span></a>
+        <a href="#contact"><span data-en>Contact</span><span data-ka>კონტაქტი</span></a>
+      </div>
+      <div class="foot-col">
+        <h5><span data-en>Contact</span><span data-ka>კონტაქტი</span></h5>
+        <a href="mailto:info@infinitymap.ge">info@infinitymap.ge</a>
+        <a href="tel:+995500000000">+995 500 00 00 00</a>
+        <a href="#">Tbilisi, Georgia</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="yr"></span> INFINITY MAP · INFINITYMAP.GE</span>
+      <span>41.7151° N · 44.8271° E — TBILISI</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // language toggle
+  function setLang(l){
+    document.documentElement.lang = l;
+    document.getElementById('en').classList.toggle('active', l==='en');
+    document.getElementById('ka').classList.toggle('active', l==='ka');
+    try{ localStorage.setItem('im_lang', l); }catch(e){}
+  }
+  try{ var saved = localStorage.getItem('im_lang'); if(saved) setLang(saved); }catch(e){}
+
+  // year
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // sticky header
+  var hdr = document.getElementById('hdr');
+  var onScroll = function(){ hdr.classList.toggle('scrolled', window.scrollY > 24); };
+  onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+  // hero intro
+  requestAnimationFrame(function(){ document.getElementById('hero').classList.add('in'); });
+
+  // scroll reveal
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('show'); io.unobserve(e.target); } });
+  }, {threshold:.16});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+</script>
+</body>
+</html>
